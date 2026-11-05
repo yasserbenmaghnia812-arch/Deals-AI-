@@ -36,14 +36,17 @@ alter table public.saved_products enable row level security;
 alter table public.tracked_parcels enable row level security;
 alter table public.search_history enable row level security;
 
+drop policy if exists "Users manage their own saved products" on public.saved_products;
 create policy "Users manage their own saved products" on public.saved_products
 for all to authenticated using ((select auth.uid()) = user_id)
 with check ((select auth.uid()) = user_id);
 
+drop policy if exists "Users manage their own tracked parcels" on public.tracked_parcels;
 create policy "Users manage their own tracked parcels" on public.tracked_parcels
 for all to authenticated using ((select auth.uid()) = user_id)
 with check ((select auth.uid()) = user_id);
 
+drop policy if exists "Users manage their own search history" on public.search_history;
 create policy "Users manage their own search history" on public.search_history
 for all to authenticated using ((select auth.uid()) = user_id)
 with check ((select auth.uid()) = user_id);
