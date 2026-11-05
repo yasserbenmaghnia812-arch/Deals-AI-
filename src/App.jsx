@@ -21,6 +21,9 @@ function App() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [authReady, setAuthReady] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatBusy, setChatBusy] = useState(false);
 
   const searchLinks = useMemo(() => {
     const q = encodeURIComponent(query.trim());
@@ -139,6 +142,33 @@ function App() {
     setNotice("تم فتح نتائج البحث في " + store + ".");
   }
 
+  async function sendChat(event) {
+    event.preventDefault();
+    if (!session || !supabase) {
+      setNotice("سجّل الدخول أولاً لاستخدام المساعد.");
+      return;
+    }
+    if (!chatInput.trim() || chatBusy) return;
+    const nextMessages = [...chatMessages, { role: "user", content: chatInput.trim() }];
+    setChatMessages(nextMessages);
+    setChatInput("");
+    setChatBusy(true);
+    const { data, error } = await supabase.functions.invoke("ai-assistant", {
+      body: { messages: nextMessages }
+    });
+    setChatBusy(false);
+    if (error) {
+      setChatMessages(messages => [...messages, { role: "assistant", content: "تعذر الاتصال بالمساعد. تحقق من إعداد مفتاح OpenRouter في Supabase." }]);
+      setNotice(error.message || "تعذر الاتصال بالمساعد.");
+      return;
+    }
+    if (data?.error) {
+      setChatMessages(messages => [...messages, { role: "assistant", content: data.error }]);
+      return;
+    }
+    setChatMessages(messages => [...messages, { role: "assistant", content: data.answer }]);
+  }
+
   async function trackParcel() {
     if (!tracking.trim()) {
       setNotice("أدخل رقم التتبع أو الرابط أولاً.");
@@ -215,16 +245,28 @@ function App() {
         {tab === "assistant" && <section className="panel">
           <div className="section-heading"><div><span className="kicker">الحساب والمساعد</span><h2>{session ? "حسابك" : "الدخول أو إنشاء حساب"}</h2></div><span className="spark">✦</span></div>
           {!authReady ? <div className="empty-state"><b>جارٍ التحقق من الجلسة...</b></div> :
-          session ? <div className="assistant-card"><div className="assistant-avatar">✓</div><div><b>تم تسجيل الدخول</b><p>{session.user.email}</p><button className="secondary-button" onClick={signOut}>تسجيل الخروج</button></div></div> :
-          <form className="auth-form" onSubmit={handleAuth}>
+          !session ? <form className="auth-form" onSubmit={handleAuth}>
             <div className="auth-switch"><button type="button" className={authMode === "login" ? "selected" : ""} onClick={() => setAuthMode("login")}>تسجيل الدخول</button><button type="button" className={authMode === "register" ? "selected" : ""} onClick={() => setAuthMode("register")}>حساب جديد</button></div>
             <label className="field-label" htmlFor="email">البريد الإلكتروني</label>
             <input id="email" type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="name@example.com" />
             <label className="field-label" htmlFor="password">كلمة المرور</label>
             <input id="password" type="password" autoComplete={authMode === "login" ? "current-password" : "new-password"} minLength={6} value={password} onChange={e => setPassword(e.target.value)} required placeholder="6 أحرف على الأقل" />
             <button className="primary-button" disabled={busy}>{busy ? "جارٍ التنفيذ..." : authMode === "login" ? "دخول" : "إنشاء حساب"}</button>
-          </form>}
-          <div className="feature-list"><div>✓ قاعدة بيانات Supabase مجانية</div><div>✓ حماية بيانات كل حساب عبر RLS</div><div>✓ حفظ المنتجات وسجل البحث وأرقام التتبع</div><div>◷ ربط نموذج ذكاء اصطناعي مجاني لاحقاً</div></div>
+          </form> :
+          <>
+            <div className="account-strip"><span>✓ {session.user.email}</span><button onClick={signOut}>خروج</button></div>
+            <div className="chat-window">
+              {chatMessages.length === 0 ? <div className="chat-empty">اسألني عن مواصفات منتج أو كيفية اختيار أفضل قيمة مقابل السعر.</div> :
+                chatMessages.map((message, index) => <div key={index} className={message.role === "user" ? "chat-message user-message" : "chat-message assistant-message"}>{message.content}</div>)}
+              {chatBusy && <div className="chat-message assistant-message">يفكر المساعد...</div>}
+            </div>
+            <form className="chat-form" onSubmit={sendChat}>
+              <input value={chatInput} onChange={e => setChatInput(e.target.value)} placeholder="اكتب سؤالك هنا..." aria-label="رسالة المساعد" />
+              <button disabled={chatBusy || !chatInput.trim()}>إرسال</button>
+            </form>
+            <p className="disclaimer">المساعد يستخدم نماذج مجانية عبر OpenRouter عند إضافة مفتاحك في أسرار Supabase. توفر النماذج والحدود يتغيران.</p>
+          </>}
+          <div className="feature-list"><div>✓ قاعدة بيانات Supabase مجانية</div><div>✓ حماية بيانات كل حساب عبر RLS</div><div>✓ حفظ المنتجات وسجل البحث وأرقام التتبع</div><div>✓ واجهة المساعد جاهزة للاتصال بنموذج مجاني</div></div>
           {!supabase && <p className="disclaimer">لم تُضبط إعدادات Supabase في بيئة البناء بعد.</p>}
         </section>}
       </main>
