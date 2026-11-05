@@ -1,0 +1,8 @@
+{
+  "appId": "dz.deals.ai",
+  "appName": "DZ Deals AI",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}
