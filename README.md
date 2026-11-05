@@ -13,8 +13,17 @@
 ## حدود النسخة الحالية
 - لا يوجد جلب تلقائي للأسعار أو التقييمات أو الكوبونات.
 - لا يوجد ربط API مباشر مع 17TRACK؛ التطبيق يفتح موقع التتبع.
-- المساعد الذكي لا يستدعي نموذج LLM بعد.
+- المساعد الذكي متصل بوظيفة Supabase Edge Function تستخدم OpenRouter مع اختيار نموذج مجاني تلقائياً (`openrouter/free`).
 - الحسابات الجديدة قد تتطلب تأكيد البريد الإلكتروني حسب إعدادات Auth في المشروع.
+
+## المساعد الذكي المجاني
+
+1. أنشئ مفتاحاً مجانياً من [OpenRouter API Keys](https://openrouter.ai/settings/keys).
+2. افتح [Supabase Edge Function Secrets](https://supabase.com/dashboard/project/ohfsbiuxwsjbvxpmjyqd/functions/secrets).
+3. أضف اسماً `OPENROUTER_API_KEY` وقيمته المفتاح الذي أنشأته.
+4. لا ترسل المفتاح في المحادثة ولا تضفه إلى GitHub أو APK.
+
+الاختيار الحالي هو `openrouter/free`. النماذج المجانية محدودة بعدد الطلبات وقد تتغير أو تتوقف مؤقتاً؛ لا يوجد ضمان استخدام غير محدود.
 
 ## Supabase
 - Project ref: `ohfsbiuxwsjbvxpmjyqd`
