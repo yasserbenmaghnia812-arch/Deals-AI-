@@ -50,3 +50,6 @@ with check ((select auth.uid()) = user_id);
 
 grant usage on schema public to authenticated;
 grant select, insert, update, delete on public.saved_products, public.tracked_parcels, public.search_history to authenticated;
+
+-- Keep the tables inaccessible to unauthenticated clients.
+revoke all on public.saved_products, public.tracked_parcels, public.search_history from anon;
